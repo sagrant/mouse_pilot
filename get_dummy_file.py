@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import pandas as pd
-import numpy as np
 import argparse
 
 '''
@@ -17,23 +16,35 @@ parser.add_argument('-i', '--inFile')
 parser.add_argument('-o', '--outFile')
 args = parser.parse_args()
 
+class getDummy():
 
-def parseM8(inFile):
-    m8df = pd.read_csv(inFile, sep = '\t', usecols = [0, 1, 13])
+    def __init__(self, m8Df):
+        self.m8Df = m8Df
 
-    taxLst = []
-    for prot, cont, taxon in m8df.itertuples(index=False):
-        if not pd.isna(taxon):  
-            splitTax = taxon.split(';')
-            taxLst.append(splitTax[0])
 
-    fakeTaxList = list(range(len(taxLst)))
-    fakeCountList = list(range(len(taxLst)))
+    def parseM8(self,):
+        taxLst = []
+        for prot, cont, taxon in self.m8Df.itertuples(index=False):
+            if not pd.isna(taxon):  
+                splitTax = taxon.split(';')
+                taxLst.append(splitTax[0])
 
-    return taxLst, fakeTaxList, fakeCountList
+        fakeTaxList = list(range(len(taxLst)))
+        fakeCountList = list(range(len(taxLst)))
+        return taxLst, fakeTaxList, fakeCountList
 
-taxList, fakeTaxonomy, fakeCount = parseM8(args.inFile)
 
-with open(args.outFile, 'w') as outHandle:
-    for t, fT, fC in zip(taxList, fakeTaxonomy, fakeCount):
-        outHandle.write('{}\t{}\t{}\n'.format(fT, t, fC))
+def main():
+    ### Read DIAMOND output 
+    m8df = pd.read_csv(args.inFile, sep = '\t', usecols = [0, 1, 13])
+
+    parseFunc = getDummy(m8df)
+    taxonList, fakeTaxonList, fakeCountList = parseFunc.parseM8()
+
+    #write concatenated paired end FASTQs to new file
+    with open(args.outFile, 'w') as outHandle:
+        for t, fT, fC in zip(taxonList, fakeTaxonList, fakeCountList):
+            outHandle.write('{}\t{}\t{}\n'.format(fT, t, fC))
+
+if __name__ == "__main__":
+    main()
