@@ -14,7 +14,7 @@ if not hashseed:
 
 """
 02-26-2024
-Assign consensus annotations to contigs and proteins based on gb_taxonomy_tools and DIAMOND outputs 
+Assign consensus annotations to genes based on gb_taxonomy_tools and DIAMOND outputs 
 
 args
 -i = input file is output from merge_taxon_IDs.py (merged file)
