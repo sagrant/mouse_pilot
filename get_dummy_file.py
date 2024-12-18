@@ -41,7 +41,7 @@ def main():
     parseFunc = getDummy(m8df)
     taxonList, fakeTaxonList, fakeCountList = parseFunc.parseM8()
 
-    #write concatenated paired end FASTQs to new file
+    #write dummy file
     with open(args.outFile, 'w') as outHandle:
         for t, fT, fC in zip(taxonList, fakeTaxonList, fakeCountList):
             outHandle.write('{}\t{}\t{}\n'.format(fT, t, fC))
