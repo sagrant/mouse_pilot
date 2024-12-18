@@ -8,7 +8,7 @@ There are two sides of this analysis:
 3. Analysis of proteomics results
 
 Overview of entire workflow:
-![mouse_pilot_bioinformatics_workflow](https://github.com/user-attachments/assets/c1481095-3647-4bcd-b404-5c5b41b8aeaf)
+![github_figure1](https://github.com/user-attachments/assets/c4fffb37-0260-4cef-92d7-ae8ddbc915d4)
 
 
 A diagram of the metagenome annotations workflow is displayed below:
