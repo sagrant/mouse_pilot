@@ -22,7 +22,7 @@ This script uses the python hash() function to speed up matching of taxonomic na
 
 args
 -i = input file is output from merge_taxon_IDs.py (merged file)
--r = output csv file with all assigned annotations and taxonomic ranks
+-o = output csv file with all assigned annotations and taxonomic ranks
 -m = output csv with list of genes that received no consensus annotation
 
 """
@@ -250,14 +250,16 @@ class findConsensusAnnotations_genes():
 
     def writeOut(self, missedTaxaList, mainData, fDict, missedOutFileName, ranksOutFileName):
         ### Write file containing genes that got no consensus
+        missedOut = []
         for item in missedTaxaList:
             row1 = mainData[mainData["Gene"] == item]
             gene1 = row1.iloc[:, 0]
             prot1 = row1.iloc[:, 1]
             tax1 = row1.iloc[:, 2]
             rnk1 = row1.iloc[:, 3]
-            noConsensusGenes = pd.DataFrame({"Gene": gene1.values, "Taxon_IDs": tax1.values, "Ranks": rnk1.values})
-            noConsensusGenes.to_csv(missedOutFileName)
+            missedOut.append([gene1.values[0], tax1.values, rnk1.values])
+        noConsensusGenes = pd.DataFrame(missedOut)
+        noConsensusGenes.to_csv(missedOutFileName, index = False)
 
         ### Get assigned gene IDs so annotations can be assigned to contigs. 
         ### Get ranks so that if there is no contig-level consensus at the species level, a consensus can be found among genera or families, etc.
@@ -274,8 +276,8 @@ class findConsensusAnnotations_genes():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--inFile")
-    parser.add_argument("-r", "--ranks")
-    parser.add_argument("-m", "--missed")
+    parser.add_argument("-o", "--outFile")
+    parser.add_argument("-m", "--missedGenes")
     args = parser.parse_args()
 
     finder_genes = findConsensusAnnotations_genes(args.inFile)
@@ -284,7 +286,7 @@ def main():
     mainHashList, lookupDictionary, countNaN = finder_genes.hashTaxa(geneTaxonomyDict)
     allAnnotsList, missedTaxa, SpeciesLen, GenusLen, FamilyLen, OrderLen, ClassLen, PhylumLen, KingdomLen = finder_genes.findConsensus(mainHashList, countNaN)
     foundDf, foundDict = finder_genes.unHash(allAnnotsList, lookupDictionary)
-    finder_genes.writeOut(missedTaxa, mainDf, foundDict, args.missed, args.ranks)
+    finder_genes.writeOut(missedTaxa, mainDf, foundDict, args.missedGenes, args.outFile)
 
     ## Write summary stats to STDOUT
     print(f'{args.inFile} summary stats')
