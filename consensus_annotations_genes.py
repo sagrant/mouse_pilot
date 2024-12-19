@@ -6,15 +6,19 @@ from collections import Counter
 import os
 import sys
 
-### Set hash seed so results are reproducible
-hashseed = os.getenv("PYTHONHASHSEED")
-if not hashseed:
-    os.environ["PYTHONHASHSEED"] = "0"
-    os.execv(sys.executable, [sys.executable] + sys.argv)
-
 """
 02-26-2024
 Assign consensus annotations to contigs and proteins based on gb_taxonomy_tools and DIAMOND outputs 
+This method combines majority rule and Least Common Ancestor (LCA) strategies for identifying consensus annotations
+at the gene level
+
+In the input file there are k annotations per gene, with k being the integer value that was given to the -k 
+argument when running DIAMOND. The objective is to use these k annotations and their taxonomic ranks to identify 
+a consensus annotation. If the majority of k annotations agree, that taxon is selected as the consensus annotation. 
+If the majority of the k annotations do NOT agree, the code will "step back" in the taxonomic lineages to see if 
+there is the majority of taxa agree at a higher taxonomic rank. 
+
+This script uses the python hash() function to speed up matching of taxonomic names. 
 
 args
 -i = input file is output from merge_taxon_IDs.py (merged file)
@@ -23,11 +27,11 @@ args
 
 """
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--inFile")
-parser.add_argument("-r", "--ranks")
-parser.add_argument("-m", "--missed")
-args = parser.parse_args()
+### Set hash seed so results are reproducible
+hashseed = os.getenv("PYTHONHASHSEED")
+if not hashseed:
+    os.environ["PYTHONHASHSEED"] = "0"
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 class findConsensusAnnotations_genes():
@@ -268,6 +272,12 @@ class findConsensusAnnotations_genes():
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--inFile")
+    parser.add_argument("-r", "--ranks")
+    parser.add_argument("-m", "--missed")
+    args = parser.parse_args()
+
     finder_genes = findConsensusAnnotations_genes(args.inFile)
     groupGenesDf, mainDf = finder_genes.parseInData()
     geneTaxonomyDict, emptyGenesList = finder_genes.getTaxonomyDict(groupGenesDf, 'Gene')
@@ -275,7 +285,6 @@ def main():
     allAnnotsList, missedTaxa, SpeciesLen, GenusLen, FamilyLen, OrderLen, ClassLen, PhylumLen, KingdomLen = finder_genes.findConsensus(mainHashList, countNaN)
     foundDf, foundDict = finder_genes.unHash(allAnnotsList, lookupDictionary)
     finder_genes.writeOut(missedTaxa, mainDf, foundDict, args.missed, args.ranks)
-
 
     ## Write summary stats to STDOUT
     print(f'{args.inFile} summary stats')
