@@ -15,16 +15,41 @@ A diagram of the metagenome annotations workflow is displayed below:
 ![github_figure2](https://github.com/user-attachments/assets/45a57ff5-aaf2-4ed1-b779-ea2262f96d05)
 The goal of this analysis is to assign taxonomic annotations to genes, contigs, and bins. Multiple softwares are used to increase our confidence that each annotation is correct. Our approach combines the Least Common Ancestor (LCA) and majority rule methods to assign annotations to genes, contigs, or bins.
 
-
 Description of each step in the metagenome annotations workflow:
-1. (a) Generate contig-level annotations with mmseqs software (b) Generate gene-level annotations with DIAMOND software.
-2. Generate dummy .taxid file for gb_taxonomy_tools. Normal .taxid files have 3 columns: genbank ID, taxon ID, and count. A dummy .taxid simulates the first and third columns with irrelevant integers. The second column contains valid taxon IDs. This allows the researcher to retrieve all taxonomic ranks for each DIAMOND annotation without carrying out the entire gb_taxonomy_tools workflow.
-3. Run gb_taxonomy_tools with dummy .taxid file to get taxonomic ranks for each DIAMOND annotation
-4. Merge DIAMOND and gb_taxnonomy_tools output. The output file contains 4 columns: Gene ID, Protein ID, NCBI Taxon ID, taxonomic ranks.
-5. Generate consensus annotations for each gene. There are two output files. The first output file is specified by the -o argument. This output file contains 3 columns: Gene ID, taxonomic ranks, and gene-level consensus annotation. The second output file is specified by the -m argument. This second output file also contains 3 columns: Gene ID, list of taxonomic IDs output by DIAMOND for that gene, and ranks output by gb_taxonomy_tools for each taxonomic ID. This script also prints summary statistics to STDOUT. The summary stats include: Number of unique genes, Percent of genes that were assigned a consensus annotation, number of genes that were missed (not assigned any taxonomic annotation). There are also statistics printed that display the percentage of species, genus, family, etc. annotations out of all annotations.
-6. Generate consensus annotations for each contig. There are two output files. The first output file is specified by the -o argument. This output file contains 5 columns: Contig ID, Gene ID, contig-level consensus annotation, and taxonomic ranks. The second output file is specificed by the -m argument. This second output file contains 1 column: the Contig ID of any contig that was not assigned a consensus annotation. This script also prints summary statistics to STDOUT. The summary stats include: Number of input contigs, Number of contigs that were assigned a consensus annotation, number of contigs that were missed (not assigned any taxonomic annotation). There are also statistics printed that display the percentage of species, genus, family, etc. annotations out of all annotations.
-7. Combine all annotation data to facilitate comparison. Determine if annotations output by different softwares agree with one another.
-8. Generate consensus annotations for each bin. Consensus annotations are provided at the gene level if there is no consensus within a bin.
 
+1. Generate annotations at the contig and gene level:
+   - Generate contig-level annotations with `mmseqs` software.
+   - Generate gene-level annotations with `DIAMOND` software.
+   - Generate a dummy `.taxid` file for `gb_taxonomy_tools`.
+     - Normal `.taxid` files have 3 columns: GenBank ID, taxon ID, and count.
+     - A dummy `.taxid` simulates the first and third columns with irrelevant integers. The second column contains valid taxon IDs.
+     - This allows the researcher to retrieve all taxonomic ranks for each `DIAMOND` annotation without carrying out the entire `gb_taxonomy_tools` workflow.
+   - Run `gb_taxonomy_tools` with the dummy `.taxid` file to get taxonomic ranks for each `DIAMOND` annotation.
+   - Merge `DIAMOND` and `gb_taxonomy_tools` output.
+     - The output file contains 4 columns: Gene ID, Protein ID, NCBI Taxon ID, and taxonomic ranks.
 
+2. Generate consensus annotations for each gene:
+   - Two output files are created:
+     - `-o` file: Gene ID, taxonomic ranks, and gene-level consensus annotation.
+     - `-m` file: Gene ID, list of taxonomic IDs output by `DIAMOND` for that gene, and ranks output by `gb_taxonomy_tools` for each taxonomic ID.
+   - Summary statistics printed to STDOUT include:
+     - Number of unique genes.
+     - Percent of genes that were assigned a consensus annotation.
+     - Number of genes that were missed.
+     - Breakdown of annotation levels (species, genus, family, etc.).
 
+3. Generate consensus annotations for each contig:
+   - Two output files are created:
+     - `-o` file: Contig ID, Gene ID, contig-level consensus annotation, and taxonomic ranks.
+     - `-m` file: Contig IDs not assigned a consensus annotation.
+   - Summary statistics printed to STDOUT include:
+     - Number of input contigs.
+     - Number of contigs assigned a consensus annotation.
+     - Number of contigs missed.
+     - Breakdown of annotation levels (species, genus, family, etc.).
+
+4. Combine all annotation data to facilitate comparison:
+   - Determine if annotations output by different softwares agree with one another.
+
+5. Generate consensus annotations for each bin:
+   - If there is no consensus within a bin, consensus annotations are provided at the gene level.
