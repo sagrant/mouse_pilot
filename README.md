@@ -18,17 +18,16 @@ The goal of this analysis is to assign taxonomic annotations to genes, contigs, 
 Description of each step in the metagenome annotations workflow:
 
 1. Generate annotations at the contig and gene level:
-   - Generate contig-level annotations with `mmseqs` software.
-   - Generate gene-level annotations with `DIAMOND` software.
-   - Generate a dummy `.taxid` file for `gb_taxonomy_tools`.
+   - 1.a) Generate contig-level annotations with `mmseqs` software.
+   - 1.b) Generate gene-level annotations with `DIAMOND` software.
+2. Generate a dummy `.taxid` file for `gb_taxonomy_tools`.
      - Normal `.taxid` files have 3 columns: GenBank ID, taxon ID, and count.
      - A dummy `.taxid` simulates the first and third columns with irrelevant integers. The second column contains valid taxon IDs.
      - This allows the researcher to retrieve all taxonomic ranks for each `DIAMOND` annotation without carrying out the entire `gb_taxonomy_tools` workflow.
-   - Run `gb_taxonomy_tools` with the dummy `.taxid` file to get taxonomic ranks for each `DIAMOND` annotation.
-   - Merge `DIAMOND` and `gb_taxonomy_tools` output.
+3. Run `gb_taxonomy_tools` with the dummy `.taxid` file to get taxonomic ranks for each `DIAMOND` annotation.
+4. Merge `DIAMOND` and `gb_taxonomy_tools` output.
      - The output file contains 4 columns: Gene ID, Protein ID, NCBI Taxon ID, and taxonomic ranks.
-
-2. Generate consensus annotations for each gene:
+5. Generate consensus annotations for each gene:
    - Two output files are created:
      - `-o` file: Gene ID, taxonomic ranks, and gene-level consensus annotation.
      - `-m` file: Gene ID, list of taxonomic IDs output by `DIAMOND` for that gene, and ranks output by `gb_taxonomy_tools` for each taxonomic ID.
@@ -37,8 +36,7 @@ Description of each step in the metagenome annotations workflow:
      - Percent of genes that were assigned a consensus annotation.
      - Number of genes that were missed.
      - Breakdown of annotation levels (species, genus, family, etc.).
-
-3. Generate consensus annotations for each contig:
+6. Generate consensus annotations for each contig:
    - Two output files are created:
      - `-o` file: Contig ID, Gene ID, contig-level consensus annotation, and taxonomic ranks.
      - `-m` file: Contig IDs not assigned a consensus annotation.
@@ -47,9 +45,7 @@ Description of each step in the metagenome annotations workflow:
      - Number of contigs assigned a consensus annotation.
      - Number of contigs missed.
      - Breakdown of annotation levels (species, genus, family, etc.).
-
-4. Combine all annotation data to facilitate comparison:
+7. Combine all annotation data to facilitate comparison:
    - Determine if annotations output by different softwares agree with one another.
-
-5. Generate consensus annotations for each bin:
+8. Generate consensus annotations for each bin:
    - If there is no consensus within a bin, consensus annotations are provided at the gene level.
