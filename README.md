@@ -12,7 +12,8 @@ Overview of entire workflow:
 
 
 A diagram of the metagenome annotations workflow is displayed below:
-![github_figure2](https://github.com/user-attachments/assets/45a57ff5-aaf2-4ed1-b779-ea2262f96d05)
+![github_figures](https://github.com/user-attachments/assets/e97ef049-2e15-441c-8fb7-6c8cb72d2be2)
+
 The goal of this analysis is to assign taxonomic annotations to genes, contigs, and bins. Multiple softwares are used to increase our confidence that each annotation is correct. Our approach combines the Least Common Ancestor (LCA) and majority rule methods to assign annotations to genes, contigs, or bins.
 
 Description of each step in the metagenome annotations workflow:
