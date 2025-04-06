@@ -21,13 +21,46 @@ Output:
 
 class generateDictionaries():
 
-    def __init__(self, mmseqsData, functionalData, genesData, consensusContigs):
+    """Generate required lookup dictionaries
+
+    The assembledge of the output dataframe relies on looking up all taxonomic annotations based on their 
+    assoicated contig IDs with the dict.get() method.
+
+    ...
+
+    Attributes
+    ----------
+    mmseqsData : DataFrame
+        data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
+    binData : DataFrame
+        data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
+    genesData : DataFrame
+        data frame including gene ID, complete ranks, and consensus annotation at the gene level 
+    consensusContigs : DataFrame
+        data frame including contig ID, gene ID, consensus annotation at the contig level, annotation rank, and complete ranks
+    """
+
+    def __init__(self, mmseqsData, binData, genesData, consensusContigs):
         self.mmseqsData = mmseqsData
-        self.functionalData = functionalData
+        self.binData = binData
         self.genesData = genesData
         self.consensusContigs = consensusContigs
 
     def parseMMseqsData(self):
+        """ Parse mmseqs output. Returns two dictionaries
+        
+        Parameters
+        ----------
+        mmseqsData : DataFrame
+            data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
+    
+        Returns 
+        ----------
+        getMMseqsRanksDict : dict
+            Dictionary to be used to retrieve complete annotation ranks
+        getMMseqsAnnotDict : dict
+            Dictionary to be used to retrieve mmseqs contig level annotation 
+        """
         getMMseqsRanksDict = {}
         getMMseqsAnnotDict = {}
         for mmContig, mmAnnot, mmRanks in self.mmseqsData.iloc[:, np.r_[0, 2, 3]].itertuples(index=False):
@@ -39,14 +72,42 @@ class generateDictionaries():
         return getMMseqsRanksDict, getMMseqsAnnotDict
     
     def parseBinData(self):
+        """ Parse gtdbtk output. Returns dictionary
+        
+        Parameters
+        ----------
+        binData : DataFrame
+            data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
+    
+        Returns 
+        ----------
+        binnedTaxaDict : dict
+            Dictionary to be used to retrieve bin level annotation 
+        """
         binnedTaxaDict = {}
-        for genomeBin, classification in self.functionalData.iloc[:, 0:2].itertuples(index=False):
+        for genomeBin, classification in self.binData.iloc[:, 0:2].itertuples(index=False):
             binID = genomeBin.split(".")[-1]
             classificationList = classification.split(";")
             binnedTaxaDict[binID] = classificationList
         return binnedTaxaDict
 
     def parseGenesData(self):
+        """ Parse consensus annotations genes output. Returns several dictionaries
+        
+        Parameters
+        ----------
+        genesData : DataFrame
+            data frame including gene ID, complete ranks, and consensus annotation at the gene level 
+    
+        Returns 
+        ----------
+        genes2contigsDict : dict
+            Dictionary to be used to retrieve all gene IDs associated with each contig
+        geneRanksDict : dict
+            Dictionary to be used to retrieve all gene level annotation complete based on gene ID
+        geneAnnotsDict : dict
+            Dictionary to be used to retrieve tuple with (annotation, taxonomic rank) for each gene 
+        """
         self.genesData["Contig"] = self.genesData["Gene"].apply(lambda row: "_".join(row.rsplit("_")[0:3]))
         genes2contigsDict = defaultdict(list)
         geneRanksDict = {}
@@ -103,6 +164,7 @@ class makeComparison():
                     if isinstance(geneTaxon, str):
                         geneAnnotation = geneTaxon.lstrip("('").split(",")[0].rstrip("'")
                         annotsList.append([binName, binLevelAnnots, contig, contigLevelRanks[1], contigLevelAnnots[1], contigLevelRanks[0], contigLevelAnnots[0], geneName, geneAnnotation, geneRanks])
+        annotationsDf = pd.DataFrame(annotsList).rename(columns={0: "Bin",1: "Bin_Level_Ranks",2: "Contig",3: "mmeqs_Contig_Ranks",4: "mmseqs_Annotation",5: "Custom_Contig_Ranks",6: "Custom_Contig_Annotation",7: "Gene",8: "Gene_Level_Annotation",9: "Gene_Level_Ranks"})
         sortedAnnotsDf = annotationsDf.sort_values(by=["Contig"])
         return sortedAnnotsDf
 
