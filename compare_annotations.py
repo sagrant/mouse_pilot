@@ -6,7 +6,8 @@ from collections import defaultdict
 
 """
 Generate a data frame that compares all of the annotations generated with different softwares with one another, 
-do they agree?
+do they agree? This script is intended to make the data frame, and it is expected that the user will compare the output manually to check for
+inconsistencies 
 
 Inputs:
 - nr: mmseqs output
@@ -31,16 +32,39 @@ class generateDictionaries():
     Attributes
     ----------
     mmseqsData : DataFrame
-        data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
+        Data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
     binData : DataFrame
-        data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
+        Data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
     genesData : DataFrame
-        data frame including gene ID, complete ranks, and consensus annotation at the gene level 
+        Data frame including gene ID, complete ranks, and consensus annotation at the gene level 
     consensusContigs : DataFrame
-        data frame including contig ID, gene ID, consensus annotation at the contig level, annotation rank, and complete ranks
+        Data frame including contig ID, gene ID, consensus annotation at the contig level, annotation rank, and complete ranks
+
+    Methods
+    ----------
+    parseMMseqsData()
+        Parse mmseqs softawre output
+    parseBinData()
+        Parse gtdbtk software output
+    parseGenesData()
+        Parse consensus_annotations_genes.py output
+    parseContigData()
+        Parse consensus_annotations_contigs.py output
     """
 
     def __init__(self, mmseqsData, binData, genesData, consensusContigs):
+        """
+        Parameters
+        ----------
+        mmseqsData : DataFrame
+            Data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
+        binData : DataFrame
+            Data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
+        genesData : DataFrame
+            Data frame including gene ID, complete ranks, and consensus annotation at the gene level 
+        consensusContigs : DataFrame
+            Data frame including contig ID, gene ID, complete ranks, and consensus annotation at the gene level 
+        """
         self.mmseqsData = mmseqsData
         self.binData = binData
         self.genesData = genesData
@@ -52,7 +76,7 @@ class generateDictionaries():
         Parameters
         ----------
         mmseqsData : DataFrame
-            data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
+            Data frame including contig ID, annotation rank, consensus annotation at the contig level, and complete ranks from mmseqs output
     
         Returns 
         ----------
@@ -77,7 +101,7 @@ class generateDictionaries():
         Parameters
         ----------
         binData : DataFrame
-            data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
+            Data frame including bin name, complete ranks, and annotation at the bin level, among other fields from gtdbkt output 
     
         Returns 
         ----------
@@ -97,14 +121,14 @@ class generateDictionaries():
         Parameters
         ----------
         genesData : DataFrame
-            data frame including gene ID, complete ranks, and consensus annotation at the gene level 
+            Data frame including gene ID, complete ranks, and consensus annotation at the gene level 
     
         Returns 
         ----------
         genes2contigsDict : dict
             Dictionary to be used to retrieve all gene IDs associated with each contig
         geneRanksDict : dict
-            Dictionary to be used to retrieve all gene level annotation complete based on gene ID
+            Dictionary to be used to retrieve all gene level annotation complete ranks based on gene ID
         geneAnnotsDict : dict
             Dictionary to be used to retrieve tuple with (annotation, taxonomic rank) for each gene 
         """
@@ -119,6 +143,20 @@ class generateDictionaries():
         return genes2contigsDict, geneRanksDict, geneAnnotsDict
 
     def parseContigData(self, mmseqsRanksDict, mmseqsAnnotationsDict):
+        """ Parse consensus annotations contigs output. Returns two dictionaries
+        
+        Parameters
+        ----------
+        consensusContigs : DataFrame
+            Data frame including contig ID, gene ID, complete ranks, and consensus annotation at the gene level 
+    
+        Returns 
+        ----------
+        allRanksDict : dict
+            Dictionary to be used to retrieve complete taxonomic ranks associated with each contig annotation
+        contigAnnotsDict : dict
+            Dictionary to be used to retrieve contig annotation and rank based on contig ID
+        """
         allRanksDict = {}
         contigAnnotsDict = {}
         for conContig, conAnnot, rankLevel, conRanks in self.consensusContigs.iloc[:, np.r_[0, 2, 3, 4]].itertuples(index=False):
@@ -135,7 +173,56 @@ class generateDictionaries():
 
 class makeComparison():
 
+    """Compare annotations. 
+    
+    Assemble output data frame by using dict.get() method to retreive annotations for each bin/contig/gene
+
+    ...
+
+    Attributes
+    ----------
+    bins2contigsDictionary : dict
+        Lookup dict to associate bin ID with all contigs in that bin
+    binnedTaxaDict : dict
+        Dictionary to be used to retrieve bin level annotation 
+    ranksDict : dict
+        Dictionary to be used to retrieve complete taxonomic ranks associated with each contig annotation
+    contigAnnotsDict : dict
+        Dictionary to be used to retrieve contig annotation and rank based on contig ID
+    genes2contigsDict : dict
+        Dictionary to be used to retrieve all gene IDs associated with each contig
+    geneRanksDict : dict
+        Dictionary to be used to retrieve all gene level annotation complete ranks based on gene ID
+    geneAnnotsDict : dict
+        Dictionary to be used to retrieve tuple with (annotation, taxonomic rank) for each gene 
+
+    Methods
+    ----------
+    getGeneLevel()
+        Helper function to look up gene level annotation and complete ranks for each annotation based on gene ID
+    compareAll()
+        Match all bin IDs to contig IDs and gene IDs, then pull corresponding annotations with dict.get()
+    """
+
     def __init__(self, bins2contigsDictionary, binnedTaxaDict, ranksDict, contigAnnotsDict, genes2contigsDict, geneRanksDict, geneAnnotsDict):
+        """
+        Parameters
+        ----------
+        bins2contigsDictionary : dict
+            Lookup dict to associate bin ID with all contigs in that bin
+        binnedTaxaDict : dict
+            Dictionary to be used to retrieve bin level annotation 
+        ranksDict : dict
+            Dictionary to be used to retrieve complete taxonomic ranks associated with each contig annotation
+        contigAnnotsDict : dict
+            Dictionary to be used to retrieve contig annotation and rank based on contig ID
+        genes2contigsDict : dict
+            Dictionary to be used to retrieve all gene IDs associated with each contig
+        geneRanksDict : dict
+            Dictionary to be used to retrieve all gene level annotation complete ranks based on gene ID
+        geneAnnotsDict : dict
+            Dictionary to be used to retrieve tuple with (annotation, taxonomic rank) for each gene 
+        """
         self.bins2contigsDictionary = bins2contigsDictionary
         self.binnedTaxaDict = binnedTaxaDict
         self.ranksDict = ranksDict
@@ -145,12 +232,51 @@ class makeComparison():
         self.geneAnnotsDict = geneAnnotsDict
 
     def getGeneLevel(self, genes):
+        """Helper function to look up gene level annotation and complete ranks for each annotation based on gene ID
+        
+        Parameters
+        ----------
+        genes : list 
+
+        Returns 
+        ----------
+        geneLevelRanks : str
+            complete ranks for each annotation
+        geneLevelAnnots : tuple
+            taxonomic annotation for each gene with structure (annotation, rank)
+        gene : str
+            gene ID
+        """
         for gene in genes:
             geneLevelRanks = self.geneRanksDict.get(gene)
             geneLevelAnnots = self.geneAnnotsDict.get(gene)
         return geneLevelRanks, geneLevelAnnots, gene
 
     def compareAll(self):
+        """Retrieve all taxonomic annotations based on bin/contig/gene ID
+        
+        Parameters
+        ----------
+        bins2contigsDictionary : dict
+            Lookup dict to associate bin ID with all contigs in that bin
+        binnedTaxaDict : dict
+            Dictionary to be used to retrieve bin level annotation 
+        ranksDict : dict
+            Dictionary to be used to retrieve complete taxonomic ranks associated with each contig annotation
+        contigAnnotsDict : dict
+            Dictionary to be used to retrieve contig annotation and rank based on contig ID
+        genes2contigsDict : dict
+            Dictionary to be used to retrieve all gene IDs associated with each contig
+        geneRanksDict : dict
+            Dictionary to be used to retrieve all gene level annotation complete ranks based on gene ID
+        geneAnnotsDict : dict
+            Dictionary to be used to retrieve tuple with (annotation, taxonomic rank) for each gene 
+
+        Returns 
+        ----------
+        sortedAnnotsDf : DataFrame
+            Data Frame will all data that is to be compared
+        """
         annotsList = []
         for binName, binContigs in self.bins2contigsDictionary.items():
             binIdentifier = binName.replace(".", "_").split("_")[1]
